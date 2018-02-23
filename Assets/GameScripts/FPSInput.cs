@@ -6,9 +6,10 @@ using UnityEngine;
 [AddComponentMenu("Control Script/FPS Input")]
 public class FPSInput : MonoBehaviour {
     public float speed = 6.0f;
+    public const float baseSpeed = 6.0f;
     public float gravity = 1.0f;
     public float jumpHeight = 20.0f;
-	public float MaxjumpHeight = 30.0f;
+    public float MaxjumpHeight = 30.0f;
     public int jumpStep = 3;
     private float jumpLeft;
     private CharacterController _characterController;
@@ -16,6 +17,15 @@ public class FPSInput : MonoBehaviour {
     void Start() {
         _characterController = GetComponent<CharacterController>();
         jumpLeft = 0;
+    }
+    void Awake() {
+        Messenger<float>.AddListener(GameEvent.SPEED_CHANGED, OnSpeedChanged);
+    }
+    void Destroy() {
+        Messenger<float>.RemoveListener(GameEvent.SPEED_CHANGED, OnSpeedChanged);
+    }
+    private void OnSpeedChanged(float value) {
+        speed = baseSpeed * value;
     }
 
     Queue<float> createJumpCurve(int steps, float height) {
@@ -29,6 +39,9 @@ public class FPSInput : MonoBehaviour {
 
     // Update is called once per frame
     void Update() {
+        if (GlobalVariables.Paused) {
+            return;
+        }
         float deltaX = Input.GetAxis("Horizontal") * speed;
         float deltaZ = Input.GetAxis("Vertical") * speed;
         Vector3 movement = new Vector3(deltaX, 0, deltaZ);
